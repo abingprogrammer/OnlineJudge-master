@@ -18,8 +18,8 @@ from submission.models import JudgeStatus, Submission
 from utils.cache import cache
 from utils.constants import CacheKey
 
-logger = logging.getLogger(__name__)
-
+#logger = logging.getLogger(__name__)
+logger = logging.getLogger("django")
 
 # 继续处理在队列中的问题
 def process_pending_task():
@@ -117,12 +117,13 @@ class JudgeDispatcher(DispatcherBase):
             self.submission.statistic_info["score"] = score
 
     def judge(self):
+        logger.debug("2")
         server = self.choose_judge_server()
         if not server:
             data = {"submission_id": self.submission.id, "problem_id": self.problem.id}
             cache.lpush(CacheKey.waiting_queue, json.dumps(data))
             return
-
+        logger.debug("3")
         language = self.submission.language
         sub_config = list(filter(lambda item: language == item["name"], languages))[0]
         spj_config = {}
@@ -131,7 +132,7 @@ class JudgeDispatcher(DispatcherBase):
                 if lang["name"] == self.problem.spj_language:
                     spj_config = lang["spj"]
                     break
-
+        logger.debug("4")
         if language in self.problem.template:
             template = parse_problem_template(self.problem.template[language])
             code = f"{template['prepend']}\n{self.submission.code}\n{template['append']}"
@@ -150,7 +151,7 @@ class JudgeDispatcher(DispatcherBase):
             "spj_compile_config": spj_config.get("compile"),
             "spj_src": self.problem.spj_code
         }
-
+        logger.debug("end")
         Submission.objects.filter(id=self.submission.id).update(result=JudgeStatus.JUDGING)
 
         resp = self._request(urljoin(server.service_url, "/judge"), data=data)#把数据提交到判题服务器2018.1.31

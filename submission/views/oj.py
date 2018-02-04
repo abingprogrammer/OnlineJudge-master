@@ -1,8 +1,8 @@
 import ipaddress
 
 from account.decorators import login_required, check_contest_permission
-from judge.tasks import judge_task
-# from judge.dispatcher import JudgeDispatcher
+#from judge.tasks import judge_task#调试开发不用这个，用下面那个
+from judge.dispatcher import JudgeDispatcher#2018.2.4
 from problem.models import Problem, ProblemRuleType
 from contest.models import Contest, ContestStatus, ContestRuleType
 from options.options import SysOptions
@@ -14,7 +14,8 @@ from ..models import Submission
 from ..serializers import (CreateSubmissionSerializer, SubmissionModelSerializer,
                            ShareSubmissionSerializer)
 from ..serializers import SubmissionSafeModelSerializer, SubmissionListSerializer
-
+import logging#2018.2.4
+logger = logging.getLogger("django")#2018.2.4
 
 class SubmissionAPI(APIView):
     def throttling(self, request):
@@ -73,8 +74,9 @@ class SubmissionAPI(APIView):
                                                ip=request.session["ip"],
                                                contest_id=data.get("contest_id"))
         # use this for debug
-        # JudgeDispatcher(submission.id, problem.id).judge()
-        judge_task.delay(submission.id, problem.id)
+        JudgeDispatcher(submission.id, problem.id).judge()
+        #judge_task.delay(submission.id, problem.id)2018.2.4
+        logger.debug("1")
         if hide_id:
             return self.success()
         else:
