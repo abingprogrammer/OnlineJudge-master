@@ -14,7 +14,7 @@ import raven
 from copy import deepcopy
 from utils.shortcuts import get_env
 #from .custom_settings import *
-
+加了这个
 production_env = get_env("OJ_ENV", "dev") == "production"
 if production_env:
     from .production_settings import *
