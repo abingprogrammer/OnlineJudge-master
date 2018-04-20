@@ -143,7 +143,7 @@ class UserAdminAPI(APIView):
         return self.success()
 
 
-class GenerateUserAPI(APIView):
+class GenerateUserAPI(APIView):#生成用户
     @super_admin_required
     def get(self, request):
         """
