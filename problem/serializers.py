@@ -3,7 +3,7 @@ from django import forms
 from judge.languages import language_names, spj_language_names
 from utils.api import UsernameSerializer, serializers
 
-from .models import Problem, ProblemRuleType, ProblemTag
+from .models import Problem, ProblemRuleType, ProblemTag, SmallProblem, SmallTag, SmallType
 from .utils import parse_problem_template
 
 
@@ -31,6 +31,34 @@ class Difficulty(object):
     LOW = "Low"
     MID = "Mid"
     HIGH = "High"
+
+#2018.3.12
+class CreateOrEditSmallSerializer(serializers.Serializer):
+    _id = serializers.CharField(max_length=32, allow_blank=True, allow_null=True)
+    title = serializers.CharField(max_length=128)
+    description = serializers.CharField()
+    tags = serializers.ListField(child=serializers.CharField(max_length=32), allow_empty=False)
+    type = serializers.ChoiceField(choices=[SmallType.Single,SmallType.Multiple,SmallType.Blank])
+    options = serializers.ListField(child=serializers.CharField(max_length=128), allow_empty=True)
+    answer = serializers.ListField(child=serializers.CharField(max_length=32), allow_empty=False)
+    visible = serializers.BooleanField()
+
+class CreateSmallSerializer(CreateOrEditSmallSerializer):
+    pass
+
+
+class EditSmallSerializer(CreateOrEditSmallSerializer):
+    id = serializers.IntegerField()
+
+
+class CreateContestSmallSerializer(CreateOrEditSmallSerializer):
+    contest_id = serializers.IntegerField()
+
+
+class EditContestSmallSerializer(CreateOrEditSmallSerializer):
+    id = serializers.IntegerField()
+    contest_id = serializers.IntegerField()
+
 
 
 class CreateOrEditProblemSerializer(serializers.Serializer):
@@ -96,6 +124,9 @@ class BaseProblemSerializer(serializers.ModelSerializer):
             ret[lang] = parse_problem_template(code)["template"]
         return ret
 
+class BaseSmallProblemSerializer(serializers.ModelSerializer):
+    tags = serializers.SlugRelatedField(many=True, slug_field="name", read_only=True)
+    created_by = UsernameSerializer()
 
 class ProblemAdminSerializer(BaseProblemSerializer):
     class Meta:
@@ -110,6 +141,20 @@ class ProblemSerializer(BaseProblemSerializer):
         model = Problem
         exclude = ("test_case_score", "test_case_id", "visible", "is_public",
                    "spj_code", "spj_version", "spj_compile_ok")
+
+#2018.3.10
+class SmallProblemSerializer(BaseSmallProblemSerializer):
+    tags = serializers.SlugRelatedField(many=True, slug_field="name", read_only=True)
+    created_by = UsernameSerializer()
+    class Meta:
+        model = SmallProblem
+        fields = "__all__"
+
+# 2018.3.11
+class SmallTagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SmallTag
+        fields = "__all__"
 
 
 class ProblemSafeSerializer(BaseProblemSerializer):

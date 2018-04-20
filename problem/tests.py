@@ -9,8 +9,8 @@ from django.conf import settings
 
 from utils.api.tests import APITestCase
 
-from .models import ProblemTag
-from .models import Problem, ProblemRuleType
+from .models import ProblemTag, SmallTag
+from .models import Problem, ProblemRuleType, SmallProblem
 from contest.models import Contest
 from contest.tests import DEFAULT_CONTEST_DATA
 
@@ -27,7 +27,10 @@ DEFAULT_PROBLEM_DATA = {"_id": "A-110", "title": "test", "description": "<p>test
                                              "input_size": 0, "score": 0}],
                         "rule_type": "ACM", "hint": "<p>test</p>", "source": "test"}
 
-
+DEFAULT_SMALL_DATA = {"title": "test", "description": "<p>test</p>",
+                      "answer":['A'], "type":"Single",
+                      "visible":True, "tags": ["test"]
+}
 class ProblemCreateTestBase(APITestCase):
     @staticmethod
     def add_problem(problem_data, created_by):
@@ -63,6 +66,23 @@ class ProblemCreateTestBase(APITestCase):
             problem.tags.add(tag)
         return problem
 
+class SmallCreateTestBase(APITestCase):
+    @staticmethod
+    def add_problem(problem_data, created_by):
+        data = copy.deepcopy(problem_data)
+        data["created_by"] = created_by
+        tags = data.pop("tags")
+
+
+        problem = SmallProblem.objects.create(**data)
+
+        for item in tags:
+            try:
+                tag = SmallTag.objects.get(name=item)
+            except SmallTag.DoesNotExist:
+                tag = SmallTag.objects.create(name=item)
+            problem.tags.add(tag)
+        return problem
 
 class ProblemTagListAPITest(APITestCase):
     def test_get_tag_list(self):
@@ -190,6 +210,31 @@ class ProblemAPITest(ProblemCreateTestBase):
         resp = self.client.get(self.url + "?id=" + self.problem._id)
         self.assertSuccess(resp)
 
+class SmallProblemAPITest(SmallCreateTestBase):
+    def setUp(self):
+        self.url = self.reverse("small_problem_api")
+        admin = self.create_admin(login=False)
+        self.problem = self.add_problem(DEFAULT_SMALL_DATA, admin)
+        self.create_user("test", "test123")
+
+    def test_get_problem_list(self):
+        resp = self.client.get(f"{self.url}?limit=10")
+        self.assertSuccess(resp)
+
+    def get_one_problem(self):
+        resp = self.client.get(self.url + "?id=" + self.problem._id)
+        self.assertSuccess(resp)
+#2018.3.12
+# class SmallProblemAdminAPITest(APITestCase):
+#     def setUp(self):
+#         self.url = self.reverse("small_problem_admin_api")
+#         self.create_super_admin()
+#         self.data = copy.deepcopy(DEFAULT_SMALL_DATA)
+#
+#     def test_create_problem(self):
+#         resp = self.client.post(self.url, data=self.data)
+#         self.assertSuccess(resp)
+#         return resp
 
 class ContestProblemAdminTest(APITestCase):
     def setUp(self):

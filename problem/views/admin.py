@@ -15,11 +15,13 @@ from submission.models import Submission
 from utils.api import APIView, CSRFExemptAPIView, validate_serializer
 from utils.shortcuts import rand_str, natural_sort_key
 
-from ..models import Problem, ProblemRuleType, ProblemTag
+from ..models import Problem, ProblemRuleType, ProblemTag, SmallProblem, SmallType, SmallTag
 from ..serializers import (CreateContestProblemSerializer, CompileSPJSerializer,
                            CreateProblemSerializer, EditProblemSerializer, EditContestProblemSerializer,
                            ProblemAdminSerializer, TestCaseUploadForm, ContestProblemMakePublicSerializer,
-                           AddContestProblemSerializer)
+                           AddContestProblemSerializer, CreateSmallSerializer,
+                           CreateOrEditSmallSerializer, CreateContestSmallSerializer, EditSmallSerializer,
+                           SmallProblemSerializer)
 import logging#2018.1.30
 
 logger = logging.getLogger("django")#2018.1.30
@@ -199,15 +201,15 @@ class ProblemBase(APIView):
         ensure_created_by(problem, request.user)
         if Submission.objects.filter(problem=problem).exists():
             return self.error("Can't delete the problem as it has submissions")
-        d = os.path.join(settings.TEST_CASE_DIR, problem.test_case_id)
+        d = os.path.join(settings.TEST_CASE_DIR, problem.test_case_id)#删除问题的同时，也要删除测试用例
         if os.path.isdir(d):
-            shutil.rmtree(d, ignore_errors=True)
+            shutil.rmtree(d, ignore_errors=True)#递归删除文件
         problem.delete()
         return self.success()
 
 
 class ProblemAPI(ProblemBase):
-    @problem_permission_required
+    @problem_permission_required#添加问题，做权限认证
     @validate_serializer(CreateProblemSerializer)
     def post(self, request):
         data = request.data
@@ -222,7 +224,7 @@ class ProblemAPI(ProblemBase):
             return self.error(error_info)
 
         # todo check filename and score info
-        tags = data.pop("tags")
+        tags = data.pop("tags")#list类型
         problem = Problem.objects.create(**data)
 
         for item in tags:
@@ -297,6 +299,94 @@ class ProblemAPI(ProblemBase):
                 tag = ProblemTag.objects.create(name=tag)
             problem.tags.add(tag)
 
+        return self.success()
+
+#2018.3.12
+class SmallProblemAPI(APIView):
+    @problem_permission_required
+    @validate_serializer(CreateSmallSerializer)
+    def post(self, request):#创建
+        data = request.data
+        data["created_by"] = request.user#获取当前用户
+        _id = data["_id"]#判断展示id
+        if not _id:
+            return self.error("Display ID is required")
+        if SmallProblem.objects.filter(_id=_id, contest_id__isnull=True).exists():
+            return self.error("Display ID already exists")
+
+        tags = data.pop("tags")  # 对于新标签则添加
+        problem = SmallProblem.objects.create(**data)#前台传来json数据，序列化后可直接往数据库添加数据对象
+        for item in tags:
+            try:
+                tag = SmallTag.objects.get(name=item)
+            except SmallTag.DoesNotExist:
+                tag = SmallTag.objects.create(name=item)
+            problem.tags.add(tag)
+        return self.success(SmallProblemSerializer(problem).data)
+
+    @problem_permission_required
+    def get(self, request):#查询
+        problem_id = request.GET.get("id")
+        user = request.user
+        if problem_id:
+            try:
+                problem = SmallProblem.objects.get(id=problem_id)
+                ensure_created_by(problem, request.user)
+                return self.success(SmallProblemSerializer(problem).data)
+            except SmallProblem.DoesNotExist:
+                return self.error("Problem does not exist")
+
+        problems = SmallProblem.objects.filter(contest_id__isnull=True).order_by("-create_time")
+        if not user.can_mgmt_all_problem():
+            problems = problems.filter(created_by=user)
+        keyword = request.GET.get("keyword")
+        if keyword:
+            problems = problems.filter(title__contains=keyword)
+        return self.success(self.paginate_data(request, problems, SmallProblemSerializer))
+
+    @problem_permission_required
+    @validate_serializer(EditSmallSerializer)
+    def put(self, request):#修改
+        data = request.data
+        problem_id = data.pop("id")
+
+        try:
+            problem = SmallProblem.objects.get(id=problem_id)
+            ensure_created_by(problem, request.user)
+        except SmallProblem.DoesNotExist:
+            return self.error("Problem does not exist")
+
+        # todo check filename and score info
+        tags = data.pop("tags")
+
+        for k, v in data.items():
+            setattr(problem, k, v)
+        problem.save()
+
+        problem.tags.remove(*problem.tags.all())
+        for tag in tags:
+            try:
+                tag = SmallTag.objects.get(name=tag)
+            except SmallTag.DoesNotExist:
+                tag = SmallTag.objects.create(name=tag)
+            problem.tags.add(tag)
+
+        return self.success()
+
+    @problem_permission_required
+    def delete(self, request):#删除
+        id = request.GET.get("id")
+        if not id:
+            return self.error("Invalid parameter, id is required")
+        try:
+            problem = SmallProblem.objects.get(id=id, contest_id__isnull=True)
+        except SmallProblem.DoesNotExist:
+            return self.error("Problem does not exists")
+        ensure_created_by(problem, request.user)
+
+        # if Submission.objects.filter(problem=problem).exists():
+        #     return self.error("Can't delete the problem as it has submissions")
+        problem.delete()
         return self.success()
 
 
@@ -425,7 +515,7 @@ class MakeContestProblemPublicAPIView(APIView):
         except Problem.DoesNotExist:
             return self.error("Problem does not exist")
 
-        if not problem.contest or problem.is_public:
+        if not problem.contest or  problem.is_public:
             return self.error("Already be a public problem")
         problem.is_public = True
         problem.save()
