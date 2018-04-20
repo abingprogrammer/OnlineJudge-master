@@ -43,6 +43,7 @@ LOCAL_APPS = (
     'submission',
     'options',
     'judge',
+    'course',
 )
 
 INSTALLED_APPS = VENDOR_APPS + LOCAL_APPS
@@ -125,6 +126,10 @@ AVATAR_UPLOAD_DIR = f"{DATA_DIR}{AVATAR_URI_PREFIX}"
 
 UPLOAD_PREFIX = "/public/upload"
 UPLOAD_DIR = f"{DATA_DIR}{UPLOAD_PREFIX}"
+
+#2018.4.13
+COURSE_PREFIX = '/public/course'
+COURSE_DIR = f"{DATA_DIR}{COURSE_PREFIX}"
 
 STATICFILES_DIRS = [os.path.join(DATA_DIR, "public")]
 
