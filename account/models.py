@@ -60,7 +60,7 @@ class User(AbstractBaseUser):
         return self.problem_permission == ProblemPermission.ALL
 
     def is_contest_admin(self, contest):
-        return self.is_authenticated() and (contest.created_by == self or self.admin_type == AdminType.SUPER_ADMIN)
+        return self.is_authenticated and (contest.created_by == self or self.admin_type == AdminType.SUPER_ADMIN)
 
     class Meta:
         db_table = "user"
@@ -86,7 +86,7 @@ class UserProfile(models.Model):
     acm_problems_status = JSONField(default=dict)
     # like acm_problems_status, merely add "score" field
     oi_problems_status = JSONField(default=dict)
-
+    small_problems_status = JSONField(default=dict)#2018.3.15
     real_name = models.CharField(max_length=32, blank=True, null=True)
     avatar = models.CharField(max_length=256, default=f"{settings.AVATAR_URI_PREFIX}/default.png")
     blog = models.URLField(blank=True, null=True)
