@@ -1,6 +1,6 @@
 from django.conf.urls import url
 
-from ..views.admin import ContestProblemAPI, ProblemAPI, TestCaseAPI, MakeContestProblemPublicAPIView
+from ..views.admin import ContestProblemAPI, ProblemAPI, TestCaseAPI, MakeContestProblemPublicAPIView, SmallProblemAPI
 from ..views.admin import CompileSPJAPI, AddContestProblemAPI
 
 urlpatterns = [
@@ -10,4 +10,5 @@ urlpatterns = [
     url(r"^contest/problem/?$", ContestProblemAPI.as_view(), name="contest_problem_admin_api"),
     url(r"^contest_problem/make_public/?$", MakeContestProblemPublicAPIView.as_view(), name="make_public_api"),
     url(r"^contest/add_problem_from_public/?$", AddContestProblemAPI.as_view(), name="add_contest_problem_from_public_api"),
+    url(r"^small_problem/?$", SmallProblemAPI.as_view(), name="small_problem_admin_api"),
 ]
