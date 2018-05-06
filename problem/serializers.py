@@ -144,8 +144,8 @@ class ProblemSerializer(BaseProblemSerializer):
 
 #2018.3.10
 class SmallProblemSerializer(BaseSmallProblemSerializer):
-    tags = serializers.SlugRelatedField(many=True, slug_field="name", read_only=True)
-    created_by = UsernameSerializer()
+    # tags = serializers.SlugRelatedField(many=True, slug_field="name", read_only=True)
+    # created_by = UsernameSerializer()
     class Meta:
         model = SmallProblem
         fields = "__all__"
@@ -227,3 +227,50 @@ class AddContestProblemSerializer(serializers.Serializer):
     contest_id = serializers.IntegerField()
     problem_id = serializers.IntegerField()
     display_id = serializers.CharField()
+
+#2018.4.27
+class CreateOrEditCourseProblemSerializer(serializers.Serializer):
+    title = serializers.CharField(max_length=128)
+    description = serializers.CharField()
+    input_description = serializers.CharField()
+    output_description = serializers.CharField()
+    samples = serializers.ListField(child=CreateSampleSerializer(), allow_empty=False)
+    test_case_id = serializers.CharField(max_length=32)
+    test_case_score = serializers.ListField(child=CreateTestCaseScoreSerializer(), allow_empty=False)
+    time_limit = serializers.IntegerField(min_value=1, max_value=1000 * 60)
+    memory_limit = serializers.IntegerField(min_value=1, max_value=1024)
+    languages = serializers.MultipleChoiceField(choices=language_names)
+    template = serializers.DictField(child=serializers.CharField(min_length=1))
+    rule_type = serializers.ChoiceField(choices=[ProblemRuleType.ACM, ProblemRuleType.OI])
+    spj = serializers.BooleanField()
+    spj_language = serializers.ChoiceField(choices=spj_language_names, allow_blank=True, allow_null=True)
+    spj_code = serializers.CharField(allow_blank=True, allow_null=True)
+    spj_compile_ok = serializers.BooleanField(default=False)
+    visible = serializers.BooleanField()
+    difficulty = serializers.ChoiceField(choices=[Difficulty.LOW, Difficulty.MID, Difficulty.HIGH])
+    hint = serializers.CharField(allow_blank=True, allow_null=True)
+    source = serializers.CharField(max_length=256, allow_blank=True, allow_null=True)
+
+
+class CreateCourseProblemSerializer(CreateOrEditCourseProblemSerializer):
+    is_public = serializers.BooleanField()
+    task_id = serializers.IntegerField()
+
+class EditCourseProblemSerializer(CreateOrEditCourseProblemSerializer):
+    id = serializers.IntegerField()
+
+class CreateOrEditCourseSmallProblemSerializer(serializers.Serializer):
+    title = serializers.CharField(max_length=128)
+    description = serializers.CharField()
+    type = serializers.ChoiceField(choices=[SmallType.Single, SmallType.Multiple, SmallType.Blank])
+    options = serializers.ListField(child=serializers.CharField(max_length=128), allow_empty=True)
+    answer = serializers.ListField(child=serializers.CharField(max_length=32), allow_empty=False)
+    visible = serializers.BooleanField()
+
+class CreateCourseSmallProblemSerializer(CreateOrEditCourseSmallProblemSerializer):
+    is_public = serializers.BooleanField()
+    task_id = serializers.IntegerField()
+
+
+class EditCourseSmallProblemSerializer(CreateOrEditCourseSmallProblemSerializer):
+    id = serializers.IntegerField()

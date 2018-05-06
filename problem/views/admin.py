@@ -22,6 +22,7 @@ from ..serializers import (CreateContestProblemSerializer, CompileSPJSerializer,
                            AddContestProblemSerializer, CreateSmallSerializer,
                            CreateOrEditSmallSerializer, CreateContestSmallSerializer, EditSmallSerializer,
                            SmallProblemSerializer)
+
 import logging#2018.1.30
 
 logger = logging.getLogger("django")#2018.1.30
@@ -216,7 +217,7 @@ class ProblemAPI(ProblemBase):
         _id = data["_id"]
         if not _id:
             return self.error("Display ID is required")
-        if Problem.objects.filter(_id=_id, contest_id__isnull=True).exists():
+        if Problem.objects.filter(_id=_id, is_public=True).exists():
             return self.error("Display ID already exists")
 
         error_info = self.common_checks(request)
@@ -248,7 +249,7 @@ class ProblemAPI(ProblemBase):
             except Problem.DoesNotExist:
                 return self.error("Problem does not exist")
 
-        problems = Problem.objects.filter(contest_id__isnull=True).order_by("-create_time")
+        problems = Problem.objects.filter(is_public=True).order_by("-create_time")
         if rule_type:
             if rule_type not in ProblemRuleType.choices():
                 return self.error("Invalid rule_type")
@@ -277,7 +278,7 @@ class ProblemAPI(ProblemBase):
         _id = data["_id"]
         if not _id:
             return self.error("Display ID is required")
-        if Problem.objects.exclude(id=problem_id).filter(_id=_id, contest_id__isnull=True).exists():
+        if Problem.objects.exclude(id=problem_id).filter(_id=_id, is_public=True).exists():
             return self.error("Display ID already exists")
 
         error_info = self.common_checks(request)
@@ -311,7 +312,7 @@ class SmallProblemAPI(APIView):
         _id = data["_id"]#判断展示id
         if not _id:
             return self.error("Display ID is required")
-        if SmallProblem.objects.filter(_id=_id, contest_id__isnull=True).exists():
+        if SmallProblem.objects.filter(_id=_id, is_public=True).exists():
             return self.error("Display ID already exists")
 
         tags = data.pop("tags")  # 对于新标签则添加
@@ -336,7 +337,7 @@ class SmallProblemAPI(APIView):
             except SmallProblem.DoesNotExist:
                 return self.error("Problem does not exist")
 
-        problems = SmallProblem.objects.filter(contest_id__isnull=True).order_by("-create_time")
+        problems = SmallProblem.objects.filter(is_public=True).order_by("-create_time")
         if not user.can_mgmt_all_problem():
             problems = problems.filter(created_by=user)
         keyword = request.GET.get("keyword")
@@ -379,7 +380,7 @@ class SmallProblemAPI(APIView):
         if not id:
             return self.error("Invalid parameter, id is required")
         try:
-            problem = SmallProblem.objects.get(id=id, contest_id__isnull=True)
+            problem = SmallProblem.objects.get(id=id, is_public=True)
         except SmallProblem.DoesNotExist:
             return self.error("Problem does not exists")
         ensure_created_by(problem, request.user)
@@ -550,7 +551,7 @@ class AddContestProblemAPI(APIView):
         tags = problem.tags.all()
         problem.pk = None
         problem.contest = contest
-        problem.is_public = True
+        problem.is_public = False
         problem.visible = True
         problem._id = request.data["display_id"]
         problem.submission_number = problem.accepted_number = 0
@@ -558,3 +559,13 @@ class AddContestProblemAPI(APIView):
         problem.save()
         problem.tags.set(tags)
         return self.success()
+
+
+class ExportProblemAPI(APIView):
+    def get(self,request):
+        logger.debug(request.GET.get("problem_id"))
+        return self.success()
+#
+# class ImportProblemAPI(APIView):
+#
+#

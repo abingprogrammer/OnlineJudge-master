@@ -86,6 +86,9 @@ class APIView(View):
     def success(self, data=None):
         return self.response({"error": None, "data": data})
 
+    def success_new(self, data1=None,data2=None):
+        return self.response({"error": None, "data1": data1, "data2": data2})
+
     def error(self, msg="error", err="error"):
         return self.response({"error": err, "data": msg})
 

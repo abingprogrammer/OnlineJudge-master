@@ -7,7 +7,7 @@ from django.conf import settings
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "oj.settings")
 
 
-app = Celery("oj")
+app = Celery("oj")#celery项目名称
 
 # Using a string here means the worker will not have to
 # pickle the object when using Windows.

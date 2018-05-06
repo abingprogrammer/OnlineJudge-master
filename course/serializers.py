@@ -1,6 +1,7 @@
 from utils.api import UsernameSerializer, serializers
-from .models import Course, Course_task, CourseAnnouncement
+from .models import Course, Course_task, CourseAnnouncement,CourseSubmission
 from django import forms
+from judge.languages import language_names
 
 #课程
 class CreateCourseSeriaizer(serializers.Serializer):
@@ -16,15 +17,11 @@ class CreateCourseSeriaizer(serializers.Serializer):
     visible = serializers.BooleanField(default=True)
 
 class EditCourseSeriaizer(serializers.Serializer):
-    student_id = serializers.ListField(child=serializers.IntegerField(),allow_empty=True)
-    total_student = serializers.IntegerField()
-    total_task = serializers.IntegerField()
 
+    id = serializers.IntegerField()
     title = serializers.CharField(max_length=64)
     introduction = serializers.CharField()
-    contents = serializers.CharField()
-    picture = serializers.CharField(max_length=256)
-    task = serializers.ListField(child=serializers.IntegerField(),allow_empty=True)
+    #picture = serializers.CharField(max_length=256)
 
     start_time = serializers.DateTimeField()
     end_time = serializers.DateTimeField()
@@ -77,17 +74,47 @@ class EditCourseAnnouncementSerializer(serializers.Serializer):
 
 #课程作业单元
 class CourseTaskSerializer(serializers.ModelSerializer):
-    created_by = UsernameSerializer()
 
     class Meta:
         model = Course_task
         fields = "__all__"
 
+
+class CreateCourseTaskSerializer(serializers.Serializer):
+    course_id = serializers.IntegerField()
+    title = serializers.CharField(max_length=128)
+    #type = serializers.ChoiceField(choices=[TaskType.TASK,TaskType.PRACTICE])
+    introduction = serializers.CharField(allow_blank=True, allow_null=True)
+
+    start_time = serializers.DateTimeField()
+    end_time = serializers.DateTimeField()
+
+    # 是否可见 false的话相当于删除
+    visible = serializers.BooleanField(default=True)
+
 #课程添加用户
 class ImportUserSeralizer(serializers.Serializer):
-    name = serializers.ListField(child=serializers.CharField(max_length=32))
+    course_id = serializers.IntegerField()
+    students = serializers.ListField(child=serializers.CharField(max_length=32))
 
-class CourseMemberSeralizer(serializers.Serializer):
-    id = serializers.IntegerField()
-    username = serializers.CharField(max_length=32)
-    email = serializers.EmailField(max_length=64)
+class CreateCourseSubmissionSerializer(serializers.Serializer):
+    problem_id = serializers.IntegerField()
+    language = serializers.ChoiceField(choices=language_names)
+    code = serializers.CharField(max_length=20000)
+    course_id = serializers.IntegerField()
+    task_id = serializers.IntegerField()
+    captcha = serializers.CharField(required=False)
+
+class CourseSubmissionModelSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = CourseSubmission
+        fields = "__all__"
+
+# 不显示submission info的serializer, 用于ACM rule_type
+class CourseSubmissionSafeModelSerializer(serializers.ModelSerializer):
+    problem = serializers.SlugRelatedField(read_only=True, slug_field="_id")
+
+    class Meta:
+        model = CourseSubmission
+        exclude = ("info", "ip")

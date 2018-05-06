@@ -54,7 +54,7 @@ class ProblemAPI(APIView):
         if problem_id:
             try:
                 problem = Problem.objects.select_related("created_by") \
-                    .get(_id=problem_id, contest_id__isnull=True, visible=True)
+                    .get(_id=problem_id, is_public=True, visible=True)
                 problem_data = ProblemSerializer(problem).data#serializer序列化是把从数据库得到的QuerySet对象转化为python可以识别的dict数据类型
                 self._add_problem_status(request, problem_data)
                 return self.success(problem_data)
@@ -65,7 +65,7 @@ class ProblemAPI(APIView):
         if not limit:
             return self.error("Limit is needed")
 
-        problems = Problem.objects.select_related("created_by").filter(contest_id__isnull=True, visible=True)
+        problems = Problem.objects.select_related("created_by").filter(is_public=True, visible=True)
         # 按照标签筛选
         tag_text = request.GET.get("tag")
         if tag_text:
@@ -109,7 +109,7 @@ class SmallProblemAPI(APIView):
         if small_problem_id:
             try:
                 small_problem = SmallProblem.objects.select_related("created_by") \
-                    .get(_id=small_problem_id, contest_id__isnull=True, visible=True)
+                    .get(_id=small_problem_id, is_public=True, visible=True)
                 small_problem_data = SmallProblemSerializer(small_problem).data#serializer序列化是把从数据库得到的QuerySet对象转化为python可以识别的dict数据类型
                 #self._add_problem_status(request, problem_data)
                 return self.success(small_problem_data)
@@ -120,7 +120,7 @@ class SmallProblemAPI(APIView):
         if not limit:
             return self.error("Limit is needed")
 
-        small_problem = SmallProblem.objects.select_related("created_by").filter(contest_id__isnull=True,visible=True)
+        small_problem = SmallProblem.objects.select_related("created_by").filter(is_public=True,visible=True)
 
         #标签筛选
         tag_text = request.GET.get("tag")
@@ -175,11 +175,7 @@ class JudgeSmallProblemAPI(APIView):#判断小题
             small_problems_status = user_profile.small_problems_status.get("smallproblems", {})
             if result == SmallJudgeStatus.TRUE:
                 user_profile.accepted_number += 1
-            if id not in small_problems_status:#是否做过该题
-                small_problems_status[id] = {"status":result,"_id":id, "answer":my_answer}
-            else:
-                small_problems_status[id]["status"] = result
-                small_problems_status[id]["answer"] = my_answer
+            small_problems_status[id] = {"status":result,"_id":id, "answer":my_answer}
             user_profile.small_problems_status["smallproblems"] = small_problems_status
             user_profile.save(update_fields=["submission_number", "accepted_number", "small_problems_status"])
         return self.success({"my_status":result})

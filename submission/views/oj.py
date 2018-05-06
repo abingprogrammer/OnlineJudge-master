@@ -65,7 +65,7 @@ class SubmissionAPI(APIView):
             problem = Problem.objects.get(id=data["problem_id"], contest_id=data.get("contest_id"), visible=True)
         except Problem.DoesNotExist:
             return self.error("Problem not exist")
-
+        #更新题目提交状态2018.3.14
         submission = Submission.objects.create(user_id=request.user.id,
                                                username=request.user.username,
                                                language=data["language"],
@@ -75,8 +75,7 @@ class SubmissionAPI(APIView):
                                                contest_id=data.get("contest_id"))
         # use this for debug
         JudgeDispatcher(submission.id, problem.id).judge()
-        #judge_task.delay(submission.id, problem.id)2018.2.4
-        logger.debug("1")
+        #judge_task.delay(submission.id, problem.id)#2018.2.4
         if hide_id:
             return self.success()
         else:
