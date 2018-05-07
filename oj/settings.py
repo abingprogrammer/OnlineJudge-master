@@ -20,6 +20,9 @@ if production_env:
     from .production_settings import *
 else:
     from .dev_settings import *
+ #生产环境上需要
+# with open(os.path.join(DATA_DIR, "config", "secret.key"), "r") as f:
+#     SECRET_KEY = f.read()
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -154,13 +157,13 @@ LOGGING = {
            'level': 'ERROR',
            'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
            'formatter': 'standard'
-       },
-       'file_handler': {
-           'level': 'DEBUG',
-           'class': 'logging.handlers.RotatingFileHandler',
-           'filename': 'C:/Users/HBin/Desktop/oj/日志/loggsNew.log',
-           'formatter': 'standard'
-       } # 2018.1.26
+       }
+       # 'file_handler': {
+       #     'level': 'DEBUG',
+       #     'class': 'logging.handlers.RotatingFileHandler',
+       #     'filename': 'C:/Users/HBin/Desktop/oj/日志/loggsNew.log',
+       #     'formatter': 'standard'
+       # } # 2018.1.26
    },
    'loggers': {
        'django.request': {
@@ -177,12 +180,12 @@ LOGGING = {
            'handlers': LOGGING_HANDLERS,
            'level': 'WARNING',
            'propagate': True,
-       },
-       'django': {
-           'handlers': ['file_handler', 'console'],
-           'level': 'DEBUG',
-           'propagate': True
-       }  # 2018.1.26
+       }
+       # 'django': {
+       #     'handlers': ['file_handler', 'console'],
+       #     'level': 'DEBUG',
+       #     'propagate': True
+       # }  # 2018.1.26
    },
 }
 
@@ -226,5 +229,5 @@ RAVEN_CONFIG = {
 }
 
 IP_HEADER = "HTTP_X_REAL_IP"
-#1.16新增
+#1.16新增 开发环境需要
 SECRET_KEY = '8lu*6g0lg)9z!ba+a$ehk)xt)x%rxgb$i1&amp;022shmi1jcgihb*'
