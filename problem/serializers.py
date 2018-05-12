@@ -40,7 +40,7 @@ class CreateOrEditSmallSerializer(serializers.Serializer):
     tags = serializers.ListField(child=serializers.CharField(max_length=32), allow_empty=False)
     type = serializers.ChoiceField(choices=[SmallType.Single,SmallType.Multiple,SmallType.Blank])
     options = serializers.ListField(child=serializers.CharField(max_length=128), allow_empty=True)
-    answer = serializers.ListField(child=serializers.CharField(max_length=32), allow_empty=False)
+    answer = serializers.ListField(child=serializers.CharField(max_length=128), allow_empty=False)
     visible = serializers.BooleanField()
 
 class CreateSmallSerializer(CreateOrEditSmallSerializer):
