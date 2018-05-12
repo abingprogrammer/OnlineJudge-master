@@ -108,7 +108,6 @@ class SmallProblem(models.Model):
     options = JSONField(default=list,null=True)
     answer = JSONField(default=list)
     created_by = models.ForeignKey(User,on_delete=models.CASCADE)#外键
-    contest = models.ForeignKey(Contest,null=True, blank=True,on_delete=models.CASCADE)#外键
     tags = models.ManyToManyField(SmallTag)#多对多关联表
     visible = models.BooleanField(default=True)
     create_time = models.DateTimeField(auto_now_add=True)
@@ -119,7 +118,7 @@ class SmallProblem(models.Model):
     is_public = models.BooleanField(default=True)
     class Meta:
         db_table = "small_problem"
-        unique_together = (("_id", "contest"),)# 设置唯一
+        unique_together = (("_id"),)# 设置唯一
         ordering = ("create_time",)
 
 
