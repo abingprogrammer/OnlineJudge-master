@@ -196,7 +196,7 @@ class ProblemBase(APIView):
         if not id:
             return self.error("Invalid parameter, id is required")
         try:
-            problem = Problem.objects.get(id=id, contest_id__isnull=True)
+            problem = Problem.objects.get(id=id, is_public=True)
         except Problem.DoesNotExist:
             return self.error("Problem does not exists")
         ensure_created_by(problem, request.user)
@@ -380,13 +380,11 @@ class SmallProblemAPI(APIView):
         if not id:
             return self.error("Invalid parameter, id is required")
         try:
-            problem = SmallProblem.objects.get(id=id, is_public=True)
+            problem = SmallProblem.objects.get(id=id,is_public=True)
         except SmallProblem.DoesNotExist:
-            return self.error("Problem does not exists")
+            return self.error("Small does not exists")
         ensure_created_by(problem, request.user)
 
-        # if Submission.objects.filter(problem=problem).exists():
-        #     return self.error("Can't delete the problem as it has submissions")
         problem.delete()
         return self.success()
 
