@@ -95,7 +95,7 @@ class TestCaseAPI(CSRFExemptAPIView):
             file = form.cleaned_data["file"]
         else:
             return self.error("Upload failed")
-        tmp_file = os.path.join("C:/Users/HBin/Desktop/oj/tmp/", rand_str() + ".zip")
+        tmp_file = os.path.join(f"/tmp/{rand_str()}.zip")#生产环境
         with open(tmp_file, "wb") as f:#对文件写操作，b代表二进制文件（非文本格式），w代表写操作
             for chunk in file:
                 f.write(chunk)
