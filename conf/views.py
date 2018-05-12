@@ -27,7 +27,7 @@ from .serializers import (CreateEditWebsiteConfigSerializer,
                           CreateSMTPConfigSerializer, EditSMTPConfigSerializer,
                           JudgeServerHeartbeatSerializer,
                           JudgeServerSerializer, TestSMTPConfigSerializer, EditJudgeServerSerializer)
-
+from course.models import Course
 
 class SMTPAPI(APIView):
     @super_admin_required
@@ -226,6 +226,7 @@ class DashboardInfoAPI(APIView):
             "recent_contest_count": recent_contest_count,
             "today_submission_count": today_submission_count,
             "judge_server_count": judge_server_count,
+            "course_count":Course.objects.count(),
             "env": {
                 "FORCE_HTTPS": get_env("FORCE_HTTPS", default=False),
                 "STATIC_CDN_HOST": get_env("STATIC_CDN_HOST", default="")
