@@ -3,7 +3,7 @@
 APP=/app
 DATA=/data
 
-mkdir -p $DATA/log $DATA/ssl $DATA/test_case $DATA/public/upload $DATA/public/avatar $DATA/public/website
+mkdir -p $DATA/log $DATA/ssl $DATA/test_case $DATA/public/upload $DATA/public/avatar $DATA/public/website $DATA/public/course
 
 if [ ! -f "$APP/oj/custom_settings.py" ]; then
     echo SECRET_KEY=\"$(cat /dev/urandom | head -1 | md5sum | head -c 32)\" >> $APP/oj/custom_settings.py
@@ -15,6 +15,10 @@ fi
 
 if [ ! -f "$DATA/public/website/favicon.ico" ]; then
     cp data/public/website/favicon.ico $DATA/public/website
+fi
+
+if [ ! -f "$DATA/public/course/default.png" ]; then
+    cp data/public/course/default.png $DATA/course/avatar
 fi
 
 SSL="$DATA/ssl"
