@@ -12,7 +12,8 @@ from utils.captcha import Captcha
 from utils.throttling import TokenBucket
 from utils.cache import cache
 from options.options import SysOptions
-from judge.dispatcher import CourseJudgeDispatcher
+#from judge.dispatcher import CourseJudgeDispatcher#开发环境
+from judge.tasks import judge_course#生产环境
 
 class CourseAnnouncementListAPI(APIView):
     def get(self, request):
@@ -187,8 +188,8 @@ class JudgeProblemAPI(APIView):#判断编程题
                                                problem_id=problem.id,
                                                ip=request.session["ip"])
         # use this for debug
-        CourseJudgeDispatcher(submission.id, problem.id,course_id,task_id).judge()
-        #judge_task.delay(submission.id, problem.id)#2018.2.4
+        #CourseJudgeDispatcher(submission.id, problem.id,course_id,task_id).judge()
+        judge_course.delay(submission.id, problem.id,course_id,task_id)#2018.2.4
         if hide_id:
             return self.success()
         else:
